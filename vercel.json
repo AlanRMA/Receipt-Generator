@@ -2,7 +2,7 @@
     "version": 2,
     "builds": [
       {
-        "src": "api/app.py",
+        "src": "api/index.py",
         "use": "@vercel/python",
         "config": {
           "maxLambdaSize": "50mb"
@@ -11,8 +11,12 @@
     ],
     "routes": [
       {
-        "src": "/.*",
-        "dest": "api/app.py"
+        "src": "/create-receipt",
+        "dest": "api/index.py"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "api/index.py"
       }
     ]
   }

@@ -149,7 +149,7 @@
                 items: items
             };
 
-            fetch('http://127.0.0.1:5000/create-receipt', {
+            fetch('/create-receipt', {  // URL relativo
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

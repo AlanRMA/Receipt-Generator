@@ -1,5 +1,6 @@
 from flask import Flask, request, send_file, jsonify
 import io
+import os
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -10,7 +11,9 @@ app = Flask(__name__)
 
 @app.route('/')
 def serve_index():
-    return send_file('public/index.html')
+    # Ajusta o caminho para o arquivo HTML
+    html_path = os.path.join(os.path.dirname(__file__), '../public/index.html')
+    return send_file(html_path)
 
 @app.route('/create-receipt', methods=['POST'])
 def create_receipt():
@@ -36,7 +39,6 @@ def create_receipt():
 
     # Define o estilo para o texto
     styles = getSampleStyleSheet()
-    style_normal = styles['Normal']
     
     # Estilo para o prestador de serviços
     style_provider = ParagraphStyle(
