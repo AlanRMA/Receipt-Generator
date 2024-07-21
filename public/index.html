@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerar Recibo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .form-group button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #0056b3;
+        }
+        .item-group {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f1f1f1;
+        }
+        .item-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .item-group input {
+            margin-bottom: 5px;
+        }
+        .item-group button {
+            background-color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerar Recibo</h1>
+    <form id="receiptForm">
+        <div class="form-group">
+            <label for="service_provider">Prestador(a) de Serviço:</label>
+            <input type="text" id="service_provider" name="service_provider" required>
+        </div>
+        <div class="form-group">
+            <label for="client">Cliente:</label>
+            <input type="text" id="client" name="client" required>
+        </div>
+        <div class="form-group">
+            <label for="date">Data:</label>
+            <input type="text" id="date" name="date" required>
+        </div>
+        
+        <div id="itemsContainer">
+            <!-- Container for item groups -->
+        </div>
+        
+        <div class="form-group">
+            <button type="button" onclick="addItem()">Adicionar Item</button>
+        </div>
+        
+        <div class="form-group">
+            <button type="button" onclick="generateReceipt()">Gerar Recibo</button>
+        </div>
+    </form>
+
+    <script>
+        let itemCount = 0;
+
+        function addItem() {
+            itemCount++;
+            const itemsContainer = document.getElementById('itemsContainer');
+            const itemGroup = document.createElement('div');
+            itemGroup.classList.add('item-group');
+            itemGroup.id = `itemGroup${itemCount}`;
+            itemGroup.innerHTML = `
+                <h3>Item ${itemCount}</h3>
+                <div class="form-group">
+                    <label for="ref${itemCount}">Referência:</label>
+                    <input type="text" id="ref${itemCount}" name="ref${itemCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="description${itemCount}">Descrição:</label>
+                    <input type="text" id="description${itemCount}" name="description${itemCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="service${itemCount}">Serviço:</label>
+                    <input type="text" id="service${itemCount}" name="service${itemCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="value${itemCount}">Valor:</label>
+                    <input type="number" id="value${itemCount}" name="value${itemCount}" step="0.01" required>
+                </div>
+            `;
+            itemsContainer.appendChild(itemGroup);
+        }
+
+        function generateReceipt() {
+            const form = document.getElementById('receiptForm');
+            const serviceProvider = form.service_provider.value;
+            const client = form.client.value;
+            const date = form.date.value;
+
+            // Collect item data
+            const items = [];
+            for (let i = 1; i <= itemCount; i++) {
+                const ref = document.getElementById(`ref${i}`).value;
+                const description = document.getElementById(`description${i}`).value;
+                const service = document.getElementById(`service${i}`).value;
+                const value = parseFloat(document.getElementById(`value${i}`).value);
+
+                items.push({ ref, description, service, value });
+            }
+
+            const requestData = {
+                service_provider: serviceProvider,
+                client: client,
+                date: date,
+                items: items
+            };
+
+            fetch('http://127.0.0.1:5000/create-receipt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob(); // Return the response as a blob
+                } else {
+                    throw new Error('Network response was not ok.');
+                }
+            })
+            .then(blob => {
+                // Create a URL for the blob and open it in a new window/tab
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'recibo.pdf'; // Specify the filename for the downloaded file
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+    </script>
+</body>
+</html>
